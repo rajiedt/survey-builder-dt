@@ -1,0 +1,133 @@
+<div class="builder-container">
+  <h2>Create Survey</h2>
+
+  <button (click)="addQuestion()">+ Add Question</button>
+  <button (click)="togglePreview()">👁️ Preview</button>
+
+  <div *ngIf="!previewMode">
+   <div cdkDropList (cdkDropListDropped)="drop($event)">
+      <div *ngFor="let q of survey.questions; let i = index" cdkDrag class="question-block">
+        <label>Question {{ i + 1 }}:
+          <input [(ngModel)]="q.text" />
+        </label>
+
+        <label>Type:
+          <select [(ngModel)]="q.type">
+            <option value="short">Short Answer</option>
+            <option value="paragraph">Paragraph</option>
+            <option value="radio">Multiple Choice</option>
+            <option value="checkbox">Checkboxes</option>
+            <option value="dropdown">Dropdown</option>
+            <option value="scale">Linear Scale</option>
+            <option value="grid_radio">Multiple Choice Grid</option>
+            <option value="grid_checkbox">Checkbox Grid</option>
+            <option value="date">Date</option>
+            <option value="time">Time</option>
+            <option value="file">File Upload</option>
+          </select>
+        </label>
+
+        <div *ngIf="['radio', 'checkbox', 'dropdown'].includes(q.type)">
+          <div *ngFor="let opt of q.options; let j = index">
+            <input [(ngModel)]="q.options[j]" />
+            <button (click)="removeOption(i, j)">x</button>
+          </div>
+          <button (click)="addOption(i)">+ Option</button>
+        </div>
+
+        <div *ngIf="q.type === 'scale'">
+          <label>Min: <input type="number" [(ngModel)]="q.scaleMin" /></label>
+          <label>Max: <input type="number" [(ngModel)]="q.scaleMax" /></label>
+        </div>
+
+        <div *ngIf="q.type === 'grid_radio' || q.type === 'grid_checkbox'">
+          <div *ngIf = q.rows>
+            <strong>Rows</strong>
+            <div *ngFor="let row of q.rows; let r = index">
+              <input [(ngModel)]=q.rows[r]/>
+              <button (click)="removeRow(i, r)">x</button>
+            </div>
+            <button (click)="addRow(i)">+ Row</button>
+          </div>
+          <div *ngIf = q.columns>
+            <strong>Columns</strong>
+            <div *ngFor="let col of q.columns; let c = index">
+              <input [(ngModel)]="q.columns[c]" />
+              <button (click)="removeColumn(i, c)">x</button>
+            </div>
+            <button (click)="addColumn(i)">+ Column</button>
+          </div>
+        </div>
+
+        <button (click)="removeQuestion(i)">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="previewMode" class="preview-mode">
+    <h3>{{ survey.title }}</h3>
+    <div *ngFor="let q of survey.questions">
+      <p><strong>{{ q.text }}</strong></p>
+      <div [ngSwitch]="q.type">
+        <div *ngSwitchCase="'short'"><input type="text" /></div>
+        <div *ngSwitchCase="'paragraph'"><textarea rows="3"></textarea></div>
+        <div *ngSwitchCase="'radio'">
+          <label *ngFor="let opt of q.options">
+            <input type="radio" name="{{ q.text }}" /> {{ opt }}
+          </label>
+        </div>
+        <div *ngSwitchCase="'checkbox'">
+          <label *ngFor="let opt of q.options">
+            <input type="checkbox" /> {{ opt }}
+          </label>
+        </div>
+        <div *ngSwitchCase="'dropdown'">
+          <select>
+            <option *ngFor="let opt of q.options">{{ opt }}</option>
+          </select>
+        </div>
+        <div *ngSwitchCase="'scale'" >
+          <div *ngIf="q.scaleMin != null && q.scaleMax != null && q.scaleMax >= q.scaleMin">
+            <label *ngFor="let n of [].constructor(q.scaleMax - q.scaleMin + 1); let idx = index">
+                <input type="radio" name="{{ q.text }}" /> {{ q.scaleMin + idx }}
+            </label>
+            </div>
+        </div>
+        <div *ngSwitchCase="'grid_radio'">
+          <table>
+            <tr>
+              <th></th>
+              <th *ngFor="let col of q.columns">{{ col }}</th>
+            </tr>
+            <tr *ngFor="let row of q.rows">
+              <td>{{ row }}</td>
+              <td *ngFor="let col of q.columns">
+                <input type="radio" name="{{ row }}" />
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div *ngSwitchCase="'grid_checkbox'">
+          <table>
+            <tr>
+              <th></th>
+              <th *ngFor="let col of q.columns">{{ col }}</th>
+            </tr>
+            <tr *ngFor="let row of q.rows">
+              <td>{{ row }}</td>
+              <td *ngFor="let col of q.columns">
+                <input type="checkbox" />
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div *ngSwitchCase="'date'"><input type="date" /></div>
+        <div *ngSwitchCase="'time'"><input type="time" /></div>
+        <div *ngSwitchCase="'file'"><input type="file" /></div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Survey JSON</h3>
+  <pre>{{ survey | json }}</pre>
+</div>
